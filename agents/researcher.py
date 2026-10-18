@@ -80,9 +80,8 @@ def run(ecu: str, base_url: str = '') -> dict:
     sections = {}
     seen = set()
     search_name = ' '.join(identifiers)
-    variants = [search_name]
     for topic, pattern in SEARCH_TERMS.items():
-        query = pattern.format(ecu=variants[0])
+        query = pattern.format(ecu=search_name)
         try:
             raw = search(query, base_url) if base_url else rss_search(query)
             results = []
