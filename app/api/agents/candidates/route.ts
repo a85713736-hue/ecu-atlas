@@ -17,7 +17,7 @@ export async function POST(request:NextRequest){
  if(!task?.resultJson||!hardware)return NextResponse.json({error:'Task or hardware not found'},{status:404});
  let candidates:unknown;
  try {candidates=JSON.parse(task.resultJson).candidates;} catch {return NextResponse.json({error:'Invalid report'},{status:422});}
- const item=Array.isArray(candidates)?candidates[body.index]:null;
+ const item=Array.isArray(candidates)?candidates[Number(body.index)]:null;
  if(!item||typeof item.claim!=='string'||typeof item.subject!=='string'||typeof item.source_url!=='string')
   return NextResponse.json({error:'Invalid candidate'},{status:400});
  if(item.claim.length>500||item.subject.length>100||item.source_url.length>2000)
