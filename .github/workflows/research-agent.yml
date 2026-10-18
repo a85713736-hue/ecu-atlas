@@ -3,9 +3,9 @@ on:
   workflow_dispatch:
     inputs:
       ecu:
-        description: 'ECU family or hardware number'
-        required: true
-        default: 'Bosch MG1US008'
+        description: 'ECU family or hardware number (standalone research)'
+        required: false
+        default: ''
   schedule:
     - cron: '15 5 * * *'
 permissions:
@@ -13,26 +13,36 @@ permissions:
 jobs:
   research:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Search public sources
+      - name: Process queued website research tasks
+        if: ${{ github.event_name == 'schedule' || github.event.inputs.ecu == '' }}
         env:
-          SEARXNG_URL: ${{ vars.SEARXNG_URL }}
-          ECU_INPUT: ${{ github.event.inputs.ecu }}
+          AGENT_WORKER_TOKEN: ${{ secrets.AGENT_WORKER_TOKEN }}
+          ECU_ATLAS_URL: https://ecu-atlas-web.onrender.com
         run: |
-          if [ -z "$SEARXNG_URL" ]; then
-            echo "::error::Set SEARXNG_URL in repository Actions variables to a trusted SearXNG instance"
+          if [ -z "$AGENT_WORKER_TOKEN" ]; then
+            echo "::error::Set AGENT_WORKER_TOKEN in GitHub Actions secrets (same as Render worker token)"
             exit 1
           fi
-          python agents/researcher.py "${ECU_INPUT:-Bosch MG1US008}" --output research/out/latest.json
+          python agents/worker.py --once
+      - name: Search public sources for manually selected ECU
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.ecu != '' }}
+        env:
+          ECU_INPUT: ${{ github.event.inputs.ecu }}
+        run: python agents/researcher.py "$ECU_INPUT" --output research/out/latest.json
       - name: Extract identifiers from public pages
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.ecu != '' }}
         run: python agents/extract.py research/out/latest.json --output research/out/extracted.json
       - name: Prepare verification report
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.ecu != '' }}
         run: python agents/verify.py research/out/latest.json --output research/out/review.json
-      - name: Upload evidence for review
+      - name: Upload evidence for manual review
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.ecu != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: ecu-research-leads
