@@ -57,89 +57,59 @@ def rss_search(query: str) -> list[dict]:
     if not output: raise RuntimeError('RSS search returned no items')
     return output
 
-def ddg_search(query: str) -> list[dict]:
-    """Independent DuckDuckGo HTML search; no API key required."""
-    url = 'https://html.duckduckgo.com/html/?' + urllib.parse.urlencode({'q': query})
-    req = urllib.request.Request(url, headers={
-        'User-Agent': 'Mozilla/5.0 (compatible; ECUAtlasResearch/0.5)',
-        'Accept': 'text/html'
-    })
-    with urllib.request.urlopen(req, timeout=25) as response:
-        page = response.read(700_000).decode('utf-8', errors='replace')
+def _html_links(page: str, excluded_hosts: tuple[str, ...]) -> list[dict]:
+    """Extract possible external search links without assuming the engine's CSS."""
     output = []
-    for match in re.finditer(r'<a\\b([^>]*\\bclass=["\\'][^"\\']*result__a[^"\\']*["\\'][^>]*)>(.*?)</a>', page, flags=re.I | re.S):
-        attrs, label = match.groups()
-        href_match = re.search(r'\\bhref=["\\']([^"\\']+)["\\']', attrs, flags=re.I)
+    for attrs, label in re.findall(r'<a\\b([^>]*)>(.*?)</a>', page, flags=re.I | re.S):
+        href_match = re.search(r'href="([^"]+)"', attrs, flags=re.I)
         if not href_match:
             continue
         link = html.unescape(href_match.group(1))
         parsed = urllib.parse.urlparse(link)
         if parsed.path.startswith('/l/'):
             link = urllib.parse.parse_qs(parsed.query).get('uddg', [''])[0]
-        if not link.startswith(('https://', 'http://')):
+        parsed = urllib.parse.urlparse(link)
+        if parsed.scheme not in ('http', 'https'):
             continue
-        title = re.sub(r'<[^>]+>', ' ', label)
-        output.append({'title': html.unescape(title).strip(), 'url': link,
-                       'snippet': '', 'verification': 'unverified'})
-        if len(output) >= 10:
-            break
-    if not output:
-        raise RuntimeError('DuckDuckGo returned no parseable search results')
-    return output
-
-def brave_search(query: str) -> list[dict]:
-    """Brave public HTML results; availability may vary by network."""
-    url = 'https://search.brave.com/search?' + urllib.parse.urlencode({'q': query, 'source': 'web'})
-    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0', 'Accept': 'text/html'})
-    with urllib.request.urlopen(req, timeout=20) as response:
-        page = response.read(700_000).decode('utf-8', errors='replace')
-    output = []
-    for match in re.finditer(r'<a\\b([^>]*\\bhref=["\\']https?://[^"\\']+["\\'][^>]*)>(.*?)</a>', page, flags=re.I | re.S):
-        attrs, label = match.groups()
-        href = re.search(r'\\bhref=["\\'](https?://[^"\\']+)["\\']', attrs, flags=re.I)
-        if not href:
-            continue
-        link = html.unescape(href.group(1))
-        host = urllib.parse.urlparse(link).hostname or ''
-        if host.endswith(('brave.com', 'brave.software')):
+        host = parsed.hostname or ''
+        if any(host == h or host.endswith('.' + h) for h in excluded_hosts):
             continue
         title = html.unescape(re.sub(r'<[^>]+>', ' ', label)).strip()
         if len(title) < 8:
             continue
-        output.append({'title': title[:250], 'url': link, 'snippet': '', 'verification': 'unverified'})
+        output.append({'title': title[:250], 'url': link,
+                       'snippet': '', 'verification': 'unverified'})
         if len(output) >= 10:
             break
     if not output:
-        raise RuntimeError('Brave returned no parseable results')
+        raise RuntimeError('No parseable search links')
     return output
+
+def _html_search(endpoint: str, query: str, excluded_hosts: tuple[str, ...]) -> list[dict]:
+    url = endpoint + '?' + urllib.parse.urlencode({'q': query})
+    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0', 'Accept': 'text/html'})
+    with urllib.request.urlopen(req, timeout=20) as response:
+        page = response.read(700_000).decode('utf-8', errors='replace')
+    return _html_links(page, excluded_hosts)
+
+def ddg_search(query: str) -> list[dict]:
+    return _html_search('https://html.duckduckgo.com/html/', query, ('duckduckgo.com',))
+
+def brave_search(query: str) -> list[dict]:
+    return _html_search('https://search.brave.com/search', query, ('brave.com',))
+
+def mojeek_search(query: str) -> list[dict]:
+    return _html_search('https://www.mojeek.com/search', query, ('mojeek.com',))
 
 def github_repository_search(query: str) -> list[dict]:
     url = 'https://api.github.com/search/repositories?' + urllib.parse.urlencode({'q': query, 'per_page': 10})
-    req = urllib.request.Request(url, headers={'User-Agent': 'ECUAtlasResearcher/0.6', 'Accept': 'application/vnd.github+json'})
+    req = urllib.request.Request(url, headers={'User-Agent': 'ECUAtlasResearcher/0.6',
+                                              'Accept': 'application/vnd.github+json'})
     with urllib.request.urlopen(req, timeout=20) as response:
         payload = json.load(response)
     return [{'title': item.get('full_name', ''), 'url': item.get('html_url', ''),
              'snippet': item.get('description') or '', 'verification': 'unverified'}
             for item in payload.get('items', [])[:10] if item.get('html_url', '').startswith('https://')]
-
-def mojeek_search(query: str) -> list[dict]:
-    url = 'https://www.mojeek.com/search?' + urllib.parse.urlencode({'q': query})
-    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0', 'Accept': 'text/html'})
-    with urllib.request.urlopen(req, timeout=20) as response:
-        page = response.read(700_000).decode('utf-8', errors='replace')
-    output = []
-    for href, label in re.findall(r'<a[^>]+href="(https?://[^"]+)"[^>]*>(.*?)</a>', page, flags=re.I | re.S):
-        host = urllib.parse.urlparse(href).hostname or ''
-        title = html.unescape(re.sub(r'<[^>]+>', ' ', label)).strip()
-        if host.endswith('mojeek.com') or len(title) < 8:
-            continue
-        output.append({'title': title[:250], 'url': html.unescape(href),
-                       'snippet': '', 'verification': 'unverified'})
-        if len(output) >= 10:
-            break
-    if not output:
-        raise RuntimeError('Mojeek returned no parseable results')
-    return output
 
 def ecu_identifiers(ecu: str) -> list[str]:
     return [token.upper() for token in re.findall(r'[A-Za-z0-9]+', ecu)
