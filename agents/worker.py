@@ -1,4 +1,4 @@
-"""Run locally beside SearXNG. No public SearXNG port needed."""
+"""Run research from GitHub Actions or locally; SearXNG is optional."""
 import argparse
 import json
 import os
@@ -53,8 +53,8 @@ def main():
     args=parser.parse_args()
     base=os.environ.get('ECU_ATLAS_URL','https://ecu-atlas-web.onrender.com')
     token=os.environ.get('AGENT_WORKER_TOKEN','')
-    searx=os.environ.get('SEARXNG_URL','http://127.0.0.1:8080')
-    if not token: raise SystemExit('Set AGENT_WORKER_TOKEN locally (not AGENT_ADMIN_TOKEN)')
+    searx=os.environ.get('SEARXNG_URL','')
+    if not token: raise SystemExit('Set AGENT_WORKER_TOKEN (not AGENT_ADMIN_TOKEN)')
     while True:
         try: once(base,token,searx)
         except (urllib.error.URLError,ValueError) as exc: print('Worker API error:',exc,flush=True)
