@@ -31,7 +31,11 @@ export default async function EcuPage({params}:{params:Promise<{id:string}>}) {
     </section>
     <section className="card">
       <h2>Аппаратные ревизии ({ecu.hardware.length})</h2>
-      {ecu.hardware.length?ecu.hardware.map(h=><p key={h.id}>{h.partNumber} · PCB {h.pcbRevision||'—'} · {h.verification}</p>):<p>Подтверждённых данных пока нет.</p>}
+      {ecu.hardware.length?ecu.hardware.map(h=><div key={h.id}>
+        <p><strong>{h.partNumber}</strong> · PCB {h.pcbRevision||'не установлена'} · {h.verification}</p>
+        <p>{h.notes||'Описание ревизии пока отсутствует.'}</p>
+        <p><Link href={'/ecu/'+ecu.id+'/hardware/'+h.id}>Открыть отдельную карту HW →</Link></p>
+      </div>):<p>Подтверждённых данных пока нет.</p>}
     </section>
     <section className="card">
       <h2>Программное обеспечение ({ecu.software.length})</h2>
