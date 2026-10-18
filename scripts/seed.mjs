@@ -25,6 +25,23 @@ try {
       create:{id:r.id+'-sw',ecuId:r.id,softwareId:r.sw,engine:r.engine,vehicle:r.model,verification:'source-listed'},
       update:{}
     });
+    const loaderSpecs = [
+      {suffix:'bitbox454',tool:'BitBox',module:'FID 454',mode:'Bench',operation:'Flash/EEPROM RD/WR; checksum',url:'https://bitsoftware.com/bitbox/catalog/58',notes:'Поддержка на уровне семейства; нужен Scanmatik 2 Pro и адаптер с управлением питанием. Проверить защиту и HW.'},
+      {suffix:'pcm92',tool:'PCMflash',module:'92',mode:'Bench/service',operation:'Flash RD/WR/CK; EEPROM RD/WR',url:'https://ecutools.eu/chip-tuning/pcmflash/module-92/',notes:'Для MG1US008 SPC574K/TC277TP. Новая защита может препятствовать работе. Требуется сверка HW.'},
+      {suffix:'pcm89',tool:'PCMflash',module:'89',mode:'не установлен',operation:'требует проверки',url:'https://gt-forum.info/threads/26615/',notes:'Упомянут в каталоге как рекомендованный. Режим и функции для данного HW не проверены.'}
+    ];
+    for (const l of loaderSpecs) {
+      await prisma.ecuLoader.upsert({
+        where:{id:r.id+'-'+l.suffix},
+        create:{id:r.id+'-'+l.suffix,ecuId:r.id,tool:l.tool,module:l.module,mode:l.mode,operation:l.operation,evidenceUrl:l.url,verification:'family-documented',notes:l.notes},
+        update:{}
+      });
+    }
+    await prisma.ecuEvidence.upsert({
+      where:{id:r.id+'-pcm92-pinout'},
+      create:{id:r.id+'-pcm92-pinout',ecuId:r.id,subject:'Bench распиновка из руководства PCMflash 92',claim:'T2: +12V 103/63/46; GND 97; CAN-L 64; CAN-H 65. Применимость к конкретному HW НЕ подтверждена.',sourceUrl:'https://pcmflash.ru/downloads/pcmflash_92.pdf',sourceType:'документация загрузчика',verification:'family-documented',notes:'Не переносить в таблицу контактов автомобиля до проверки аппаратной ревизии и ориентации разъёма.'},
+      update:{}
+    });
     await prisma.ecuEvidence.upsert({
       where:{id:r.id+'-evidence'},
       create:{id:r.id+'-evidence',ecuId:r.id,subject:'Идентификаторы HW/SW',claim:r.manufacturer+' '+r.model+': '+r.hw+' / '+r.sw,sourceUrl:forum,sourceType:'профессиональный форум, коммерческий перечень',verification:'source-listed',notes:'Не подтверждает распиновку, MCU, EEPROM или способ подключения.'},
