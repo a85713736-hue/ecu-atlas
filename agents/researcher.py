@@ -111,6 +111,16 @@ def github_repository_search(query: str) -> list[dict]:
              'snippet': item.get('description') or '', 'verification': 'unverified'}
             for item in payload.get('items', [])[:10] if item.get('html_url', '').startswith('https://')]
 
+TECHNICAL_SITES = (
+    'pcmflash.ru', 'bitbox.ru', 'ecutools.eu', 'alientech-tools.com',
+    'magicmotorsport.com', 'autotuner.com', 'ecufix.info',
+    'mhhauto.com', 'digital-kaos.co.uk', 'ecuconnections.com',
+)
+
+def specialist_queries(identifier: str) -> list[str]:
+    """Domain-restricted leads; every result still requires exact ECU identity."""
+    return ['site:' + domain + ' "' + identifier + '"' for domain in TECHNICAL_SITES]
+
 def ecu_identifiers(ecu: str) -> list[str]:
     return [token.upper() for token in re.findall(r'[A-Za-z0-9]+', ecu)
             if len(token) >= 5 and any(ch.isdigit() for ch in token)]
