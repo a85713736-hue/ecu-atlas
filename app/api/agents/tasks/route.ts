@@ -8,10 +8,13 @@ const headers = { 'Cache-Control': 'no-store' };
 function authorized(request: NextRequest) {
   const secret = process.env.AGENT_ADMIN_TOKEN;
   const supplied = request.headers.get('authorization')?.replace(/^Bearer /i, '') || '';
-  if (!secret || !supplied) return false;
+  if (!secret) { console.warn('[agent-auth] AGENT_ADMIN_TOKEN missing in runtime environment'); return false; }
+  if (!supplied) { console.warn('[agent-auth] Authorization bearer token missing'); return false; }
   const a = Buffer.from(secret);
-  const b = Buffer.from(supplied);
-  return a.length === b.length && timingSafeEqual(a, b);
+  const b = Buffer.from(supplied.trim());
+  const matches = a.length === b.length && timingSafeEqual(a, b);
+  if (!matches) console.warn('[agent-auth] Token mismatch (secret and submitted values differ)');
+  return matches;
 }
 
 export async function GET(request: NextRequest) {
