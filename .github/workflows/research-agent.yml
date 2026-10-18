@@ -20,11 +20,11 @@ jobs:
           python-version: '3.12'
       - name: Search public sources
         env:
-          BRAVE_SEARCH_API_KEY: ${{ secrets.BRAVE_SEARCH_API_KEY }}
+          SEARXNG_URL: ${{ vars.SEARXNG_URL }}
           ECU_INPUT: ${{ github.event.inputs.ecu }}
         run: |
-          if [ -z "$BRAVE_SEARCH_API_KEY" ]; then
-            echo "::error::Set BRAVE_SEARCH_API_KEY in repository Actions secrets"
+          if [ -z "$SEARXNG_URL" ]; then
+            echo "::error::Set SEARXNG_URL in repository Actions variables to a trusted SearXNG instance"
             exit 1
           fi
           python agents/researcher.py "${ECU_INPUT:-Bosch MG1US008}" --output research/out/latest.json
