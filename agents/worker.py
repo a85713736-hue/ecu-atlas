@@ -26,7 +26,10 @@ def once(base, token, searx):
     try:
         found = run(task['ecu'], searx)
         if all(not s['results'] for s in found['sections'].values()):
-            raise RuntimeError('No relevant sources matched the exact ECU identifier. Try an HW part number or a different search backend.')
+            failures = [name + ': ' + str(section['error']) for name, section in found['sections'].items() if section.get('error')]
+            discarded = sum(section.get('discarded', 0) for section in found['sections'].values())
+            detail = '; '.join(failures)[:350] if failures else 'No exact identifier match; discarded results: ' + str(discarded)
+            raise RuntimeError('Search backend ' + found['search_backend'] + ': ' + detail)
         extracted = extract(found)
         review = verify(found)
         result = {'research':found,'extracted':extracted,'review':review}
