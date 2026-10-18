@@ -41,6 +41,7 @@ model Task {
   role      String
   status    String   @default("queued")
   createdAt DateTime @default(now())
+  resultJson String?
 }
 
 model EcuHardware {
