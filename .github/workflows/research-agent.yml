@@ -1,0 +1,36 @@
+name: ECU research agent
+on:
+  workflow_dispatch:
+    inputs:
+      ecu:
+        description: 'ECU family or hardware number'
+        required: true
+        default: 'Bosch MG1US008'
+  schedule:
+    - cron: '15 5 * * *'
+permissions:
+  contents: read
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Search public sources
+        env:
+          BRAVE_SEARCH_API_KEY: ${{ secrets.BRAVE_SEARCH_API_KEY }}
+          ECU_INPUT: ${{ github.event.inputs.ecu }}
+        run: |
+          if [ -z "$BRAVE_SEARCH_API_KEY" ]; then
+            echo "::error::Set BRAVE_SEARCH_API_KEY in repository Actions secrets"
+            exit 1
+          fi
+          python agents/researcher.py "${ECU_INPUT:-Bosch MG1US008}" --output research/out/latest.json
+      - name: Upload evidence for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: ecu-research-leads
+          path: research/out/latest.json
+          retention-days: 14
