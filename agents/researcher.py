@@ -16,12 +16,12 @@ import re
 import html
 
 SEARCH_TERMS = {
-    "identification": '"{ecu}" ECU HW SW identification',
-    "mcu": '"{ecu}" processor MCU SPC TC',
-    "memory": '"{ecu}" Flash EEPROM size',
-    "pinout": '"{ecu}" connector pinout wiring',
-    "loader": '"{ecu}" PCMflash BitBox CombiLoader Bench Boot',
-    "field_reports": '"{ecu}" forum repair read write experience',
+    "identification": '"{ecu}" ECU HW SW automotive',
+    "mcu": '"{ecu}" ECU microcontroller processor',
+    "memory": '"{ecu}" ECU Flash EEPROM',
+    "pinout": '"{ecu}" ECU pinout bench',
+    "loader": '"{ecu}" PCMflash BitBox bench boot',
+    "field_reports": '"{ecu}" ECU forum read write',
 }
 
 def search(query: str, base_url: str) -> list[dict]:
@@ -68,7 +68,7 @@ def relevant_result(item: dict, identifiers: list[str]) -> bool:
         return False
     if any(term in text for term in ('DISHWASHER', 'REFRIGERATOR', 'TV SERIES', 'POLICE PROCEDURAL')):
         return False
-    return any(identifier in text for identifier in identifiers)
+    return any(re.search(r'(?<![A-Z0-9])' + re.escape(identifier) + r'(?![A-Z0-9])', text) for identifier in identifiers)
 
 def run(ecu: str, base_url: str = '') -> dict:
     if not ecu.strip() or len(ecu) > 150:
@@ -78,8 +78,9 @@ def run(ecu: str, base_url: str = '') -> dict:
         raise ValueError("Specify an ECU model or hardware number containing digits")
     sections = {}
     seen = set()
+    search_name = ' '.join(identifiers)
     for topic, pattern in SEARCH_TERMS.items():
-        query = pattern.format(ecu=ecu.strip())
+        query = pattern.format(ecu=search_name)
         try:
             raw = search(query, base_url) if base_url else rss_search(query)
             results = []
