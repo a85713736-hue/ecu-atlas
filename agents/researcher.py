@@ -94,6 +94,18 @@ def run(ecu: str, base_url: str = '') -> dict:
             sections[topic] = {"query": query, "results": results, "discarded": len(raw) - len(results)}
         except Exception as exc:
             sections[topic] = {"query": query, "results": [], "error": str(exc)}
+    if not seen:
+        for query in ['"' + search_name + '"', search_name + ' ECU', 'Bosch ' + search_name]:
+            try:
+                raw = search(query, base_url) if base_url else rss_search(query)
+                results = [item for item in raw if relevant_result(item, identifiers) and item['url'] not in seen]
+                for item in results:
+                    seen.add(item['url'])
+                sections['fallback_' + str(len(sections))] = {'query': query, 'results': results}
+                if results:
+                    break
+            except Exception as exc:
+                sections['fallback_' + str(len(sections))] = {'query': query, 'results': [], 'error': str(exc)}
     return {
         "search_backend": "searxng" if base_url else "bing_rss",
         "ecu": ecu.strip(),
