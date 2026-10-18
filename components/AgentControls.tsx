@@ -56,6 +56,7 @@ export default function AgentControls(){
       <h4>Найденные источники</h4>
       {!report.sources?.length?<p>Нет источников.</p>:<ul>{report.sources.map((s,i)=><li key={i}><strong>{labels[s.category||'']||s.category||'Источник'}</strong>: {safeUrl(s.source_url)?<a href={safeUrl(s.source_url)!} target="_blank" rel="noopener noreferrer">{s.title||s.source_url}</a>:s.title||'Без ссылки'} <small>— не проверено</small>{s.snippet&&<p><small>{s.snippet}</small></p>}</li>)}</ul>}
       <h4>Структурированные кандидаты с источниками ({report.candidates?.length||0})</h4>
+      <p><small>Для привязки к HW необходимы точный аппаратный номер, ревизия платы и проверка первоисточника. До этого сведения не переносятся в подтверждённую базу.</small></p>
       <p><small>Это черновые утверждения. Не подтверждены для конкретной аппаратной ревизии.</small></p>
       {report.candidates?.length ? <ul>{report.candidates.map((c,i)=><li key={i}><strong>{labels[c.subject||'']||c.subject}:</strong> {c.claim} · HW: {c.hardware_revision||'не установлена'} · {safeUrl(c.source_url)?<a href={safeUrl(c.source_url)!} target="_blank" rel="noopener noreferrer">Источник</a>:'Без источника'}{c.excerpt&&<p><small>{c.excerpt}</small></p>}</li>)}</ul>:<p>Структурированные кандидаты пока не сформированы.</p>}
       <h4>Кандидаты: MCU, память, HW, загрузчики</h4>
