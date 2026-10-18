@@ -120,7 +120,9 @@ def extract(document):
                 break
             try:
                 body = fetch(url)
-                if document.get("ecu", "").split()[-1].upper() not in body.upper():
+                identifier = document.get("ecu", "").split()[-1]
+                normalize = lambda value: re.sub(r"[^A-Z0-9]", "", value.upper())
+                if normalize(identifier) not in normalize(body):
                     errors.append({"source_url": url, "error": "ECU identifier not found in page"})
                     continue
                 findings.append({"source_url": url, "search_category": category,
