@@ -57,19 +57,45 @@ def rss_search(query: str) -> list[dict]:
     if not output: raise RuntimeError('RSS search returned no items')
     return output
 
+def ecu_identifiers(ecu: str) -> list[str]:
+    return [token.upper() for token in re.findall(r'[A-Za-z0-9]+', ecu)
+            if len(token) >= 5 and any(ch.isdigit() for ch in token)]
+
+def relevant_result(item: dict, identifiers: list[str]) -> bool:
+    text = ' '.join(str(item.get(k, '')) for k in ('title', 'url', 'snippet')).upper()
+    host = urllib.parse.urlparse(item.get('url', '')).hostname or ''
+    if any(term in host.lower() for term in ('bosch-home.', 'boschtools.')):
+        return False
+    if any(term in text for term in ('DISHWASHER', 'REFRIGERATOR', 'TV SERIES', 'POLICE PROCEDURAL')):
+        return False
+    return any(identifier in text for identifier in identifiers)
+
 def run(ecu: str, base_url: str = '') -> dict:
     if not ecu.strip() or len(ecu) > 150:
         raise ValueError("ECU name must contain 1–150 characters")
+    identifiers = ecu_identifiers(ecu)
+    if not identifiers:
+        raise ValueError("Specify an ECU model or hardware number containing digits")
     sections = {}
+    seen = set()
     for topic, pattern in SEARCH_TERMS.items():
         query = pattern.format(ecu=ecu.strip())
         try:
-            sections[topic] = {"query": query, "results": (search(query, base_url) if base_url else rss_search(query))}
+            raw = search(query, base_url) if base_url else rss_search(query)
+            results = []
+            for item in raw:
+                url = item['url'].split('#')[0].rstrip('/')
+                if url in seen or not relevant_result(item, identifiers):
+                    continue
+                seen.add(url)
+                results.append(item)
+            sections[topic] = {"query": query, "results": results, "discarded": len(raw) - len(results)}
         except Exception as exc:
             sections[topic] = {"query": query, "results": [], "error": str(exc)}
     return {
         "search_backend": "searxng" if base_url else "bing_rss",
         "ecu": ecu.strip(),
+        "relevant_source_count": len(seen),
         "created_at": dt.datetime.now(dt.timezone.utc).isoformat(),
         "status": "needs_human_verification",
         "publication": "blocked",
