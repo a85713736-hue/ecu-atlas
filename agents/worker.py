@@ -26,7 +26,7 @@ def once(base, token, searx):
     try:
         found = run(task['ecu'], searx)
         if all(not s['results'] for s in found['sections'].values()):
-            raise RuntimeError('No search results. Verify SearXNG JSON search endpoint.')
+            raise RuntimeError('No relevant sources matched the exact ECU identifier. Try an HW part number or a different search backend.')
         extracted = extract(found)
         review = verify(found)
         result = {'research':found,'extracted':extracted,'review':review}
