@@ -220,6 +220,30 @@ def run(ecu: str, base_url: str = '') -> dict:
             except Exception as exc:
                 sections[backend + '_' + str(len(sections))] = {
                     'query': search_name, 'results': [], 'error': str(exc)}
+    if not seen:
+        specialist_results = []
+        specialist_errors = []
+        discarded = 0
+        for query in specialist_queries(search_name):
+            try:
+                raw = search(query, base_url) if base_url else rss_search(query)
+                for item in raw:
+                    url = item['url'].split('#')[0].rstrip('/')
+                    if url in seen or not relevant_result(item, identifiers):
+                        discarded += 1
+                        continue
+                    seen.add(url)
+                    specialist_results.append(item)
+                if len(specialist_results) >= 10:
+                    break
+            except Exception as exc:
+                specialist_errors.append(query + ': ' + str(exc))
+        sections['specialist_sites'] = {
+            'query': 'ECU identifier on specialist loader and forum sites',
+            'results': specialist_results,
+            'discarded': discarded,
+            'error': '; '.join(specialist_errors[:3]) if specialist_errors else None,
+        }
     return {
         "search_backend": "searxng" if base_url else "bing_rss",
         "ecu": ecu.strip(),
