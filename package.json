@@ -1,1 +1,26 @@
-{"name":"ecu-atlas","private":true,"version":"0.1.0","scripts":{"dev":"next dev","build":"prisma generate && next build","start":"next start","db:push":"prisma db push"},"dependencies":{"next":"^15.5.0","react":"^19.1.0","react-dom":"^19.1.0","@prisma/client":"^6.16.0","three":"^0.180.0","@react-three/fiber":"^9.3.0"},"devDependencies":{"typescript":"^5.9.0","prisma":"^6.16.0","@types/react":"^19.1.0","@types/node":"^24.0","@types/three":"^0.180.0"}}
+{
+  "name": "ecu-atlas",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "node scripts/seed.mjs && next start",
+    "db:push": "prisma db push"
+  },
+  "dependencies": {
+    "next": "^15.5.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "@prisma/client": "^6.16.0",
+    "three": "^0.180.0",
+    "@react-three/fiber": "^9.3.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "prisma": "^6.16.0",
+    "@types/react": "^19.1.0",
+    "@types/node": "^24.0",
+    "@types/three": "^0.180.0"
+  }
+}
