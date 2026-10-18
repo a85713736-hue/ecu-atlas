@@ -1,0 +1,5 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+model Ecu { id String @id @default(cuid()) manufacturer String family String? model String? hw String? sw String? mcu String? status String @default("unverified") createdAt DateTime @default(now()) sources Source[] }
+model Source { id String @id @default(cuid()) url String title String? ecuId String ecu Ecu @relation(fields:[ecuId],references:[id]) verified Boolean @default(false) }
+model Task { id String @id @default(cuid()) ecuId String? role String status String @default("queued") createdAt DateTime @default(now()) }

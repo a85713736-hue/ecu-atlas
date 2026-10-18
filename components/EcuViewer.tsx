@@ -1,0 +1,3 @@
+'use client';
+import {Canvas} from '@react-three/fiber';
+export default function Viewer(){return <div style={{height:350,background:'#101b30',borderRadius:12}}><Canvas camera={{position:[4,3,5]}}><ambientLight intensity={1.5}/><directionalLight position={[5,7,5]} intensity={3}/><mesh rotation={[0.15,0.2,0]}><boxGeometry args={[3,0.6,2]}/><meshStandardMaterial color="#52677e" metalness={0.65} roughness={0.45}/></mesh><mesh position={[1.65,0,0]}><boxGeometry args={[0.4,0.4,1.2]}/><meshStandardMaterial color="#212a35"/></mesh></Canvas><p style={{textAlign:'center',fontSize:12}}>Условная 3D-модель — не геометрия конкретной платы</p></div>}
