@@ -122,6 +122,25 @@ def github_repository_search(query: str) -> list[dict]:
              'snippet': item.get('description') or '', 'verification': 'unverified'}
             for item in payload.get('items', [])[:10] if item.get('html_url', '').startswith('https://')]
 
+def mojeek_search(query: str) -> list[dict]:
+    url = 'https://www.mojeek.com/search?' + urllib.parse.urlencode({'q': query})
+    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0', 'Accept': 'text/html'})
+    with urllib.request.urlopen(req, timeout=20) as response:
+        page = response.read(700_000).decode('utf-8', errors='replace')
+    output = []
+    for href, label in re.findall(r'<a[^>]+href="(https?://[^"]+)"[^>]*>(.*?)</a>', page, flags=re.I | re.S):
+        host = urllib.parse.urlparse(href).hostname or ''
+        title = html.unescape(re.sub(r'<[^>]+>', ' ', label)).strip()
+        if host.endswith('mojeek.com') or len(title) < 8:
+            continue
+        output.append({'title': title[:250], 'url': html.unescape(href),
+                       'snippet': '', 'verification': 'unverified'})
+        if len(output) >= 10:
+            break
+    if not output:
+        raise RuntimeError('Mojeek returned no parseable results')
+    return output
+
 def ecu_identifiers(ecu: str) -> list[str]:
     return [token.upper() for token in re.findall(r'[A-Za-z0-9]+', ecu)
             if len(token) >= 5 and any(ch.isdigit() for ch in token)]
