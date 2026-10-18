@@ -24,6 +24,8 @@ export async function POST(request:NextRequest){
   return NextResponse.json({error:'Candidate too long'},{status:422});
  try {if(new URL(item.source_url).protocol!=='https:')throw new Error('Invalid protocol');}
  catch{return NextResponse.json({error:'Invalid source URL'},{status:422});}
+ const existing=await prisma.ecuEvidence.findFirst({where:{ecuId:hardware.ecuId,subject:item.subject,claim:item.claim,sourceUrl:item.source_url,notes:{contains:'HW ID: '+hardware.id+';'}}});
+ if(existing)return NextResponse.json({evidence:existing,created:false});
  const evidence=await prisma.ecuEvidence.create({data:{
   ecuId:hardware.ecuId,subject:item.subject.slice(0,100),claim:item.claim.slice(0,500),
   sourceUrl:item.source_url.slice(0,2000),sourceType:'agent_candidate',
