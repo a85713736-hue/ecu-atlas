@@ -4,7 +4,7 @@ export const metadata = {title:'Bosch MG1US008 — техническое дос
 const rows=[
   ['BitBox','FID 454','Bench','Flash и EEPROM, чтение/запись; сверить конкретный HW','https://bitsoftware.com/bitbox/catalog/58'],
   ['PCMflash','92','Bench / service','В документации указаны MG1US008 SPC574K / TC277TP; ограничения защиты','https://ecutools.eu/chip-tuning/pcmflash/module-92/'],
-  ['PCMflash','89','не подтверждён','Требуется проверка применимости к конкретному HW/SW','https://gt-forum.info/threads/26615/']
+  ['PCMflash','89','OBD / семейство','Официальный перечень: Great Wall/Haval MG1US008, RD/WR/CK; сверить автомобиль и HW','https://scanmatik.pro/pages/pcm']
 ];
 export default function Mg1us008Research(){
   return <main>
@@ -27,6 +27,11 @@ export default function Mg1us008Research(){
       <p>Ранее опубликованная таблица T2 из руководства PCMflash 92: +12 В — 103/63/46; GND — 97; CAN-L — 64; CAN-H — 65.</p>
       <p><strong>Не подключать по этой таблице без сверки:</strong> номера контактов, ориентация разъёма и применимость к аппаратной ревизии должны быть подтверждены по актуальному оригиналу документации и реальному блоку.</p>
       <p><a href="https://pcmflash.ru/downloads/pcmflash_92.pdf" target="_blank" rel="noopener noreferrer">Документация PCMflash 92</a></p>
+    </section>
+    <section className="card">
+      <h2>Привязка к автомобилям</h2>
+      <p>PCMflash 89: Great Wall/Haval 1.5T и 2.0T (MG1US008) — RD/WR/CK по перечню модулей; также DongFeng 1.5T (UP8/MG1US008). Эти сведения подтверждают поддержку семейства в конкретных группах автомобилей, но не гарантируют работу с любым SW или защитой.</p>
+      <p><a href="https://scanmatik.pro/pages/pcm" target="_blank" rel="noopener noreferrer">Перечень PCMflash</a> · <a href="https://ecutools.eu/publications/pcmflash-138-update-23092024/" target="_blank" rel="noopener noreferrer">Обновление PCMflash 1.3.8</a></p>
     </section>
     <section className="card">
       <h2>Что ещё требуется установить</h2>
