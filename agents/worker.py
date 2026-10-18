@@ -34,9 +34,22 @@ def once(base, token, searx):
         os.makedirs('research/out', exist_ok=True)
         with open('research/out/' + task['id'] + '.json','w',encoding='utf-8') as handle:
             json.dump(result,handle,ensure_ascii=False,indent=2)
-        compact = {'review':{'source_count':review['source_count'],'review_status':'pending'},
+        candidates = []
+        for document in extracted['documents']:
+            for item in document.get('candidates', []):
+                candidates.append({
+                    'subject': item.get('category'),
+                    'claim': item.get('value'),
+                    'excerpt': item.get('excerpt'),
+                    'source_url': document.get('source_url'),
+                    'hardware_revision': item.get('hardware_revision'),
+                    'verification': 'unverified'
+                })
+        compact = {'candidates': candidates[:100], 'review':{'source_count':review['source_count'],'review_status':'pending'},
                    'sources':review['findings'][:35], 'extracted_documents':extracted['documents'][:15],
                    'errors':review['errors'] + extracted['errors'][:10], 'publish_allowed':False}
+        while len(json.dumps(compact,ensure_ascii=False))>220000 and compact['candidates']:
+            compact['candidates'].pop()
         while len(json.dumps(compact,ensure_ascii=False))>220000 and compact['sources']:
             compact['sources'].pop()
         api(base,token,{'action':'complete','taskId':task['id'],'status':'completed','result':compact})
