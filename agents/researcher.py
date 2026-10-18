@@ -113,6 +113,15 @@ def brave_search(query: str) -> list[dict]:
         raise RuntimeError('Brave returned no parseable results')
     return output
 
+def github_repository_search(query: str) -> list[dict]:
+    url = 'https://api.github.com/search/repositories?' + urllib.parse.urlencode({'q': query, 'per_page': 10})
+    req = urllib.request.Request(url, headers={'User-Agent': 'ECUAtlasResearcher/0.6', 'Accept': 'application/vnd.github+json'})
+    with urllib.request.urlopen(req, timeout=20) as response:
+        payload = json.load(response)
+    return [{'title': item.get('full_name', ''), 'url': item.get('html_url', ''),
+             'snippet': item.get('description') or '', 'verification': 'unverified'}
+            for item in payload.get('items', [])[:10] if item.get('html_url', '').startswith('https://')]
+
 def ecu_identifiers(ecu: str) -> list[str]:
     return [token.upper() for token in re.findall(r'[A-Za-z0-9]+', ecu)
             if len(token) >= 5 and any(ch.isdigit() for ch in token)]
