@@ -120,6 +120,9 @@ def extract(document):
                 break
             try:
                 body = fetch(url)
+                if document.get("ecu", "").split()[-1].upper() not in body.upper():
+                    errors.append({"source_url": url, "error": "ECU identifier not found in page"})
+                    continue
                 findings.append({"source_url": url, "search_category": category,
                                  "candidates": candidates(body), "review_required": True})
             except Exception as exc:
