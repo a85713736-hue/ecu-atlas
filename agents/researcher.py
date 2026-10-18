@@ -68,7 +68,8 @@ def relevant_result(item: dict, identifiers: list[str]) -> bool:
         return False
     if any(term in text for term in ('DISHWASHER', 'REFRIGERATOR', 'TV SERIES', 'POLICE PROCEDURAL')):
         return False
-    return any(re.search(r'(?<![A-Z0-9])' + re.escape(identifier) + r'(?![A-Z0-9])', text) for identifier in identifiers)
+    compact = re.sub(r'[^A-Z0-9]', '', text)
+    return any(re.search(r'(?<![A-Z0-9])' + re.escape(identifier) + r'(?![A-Z0-9])', text) or identifier in compact for identifier in identifiers)
 
 def run(ecu: str, base_url: str = '') -> dict:
     if not ecu.strip() or len(ecu) > 150:
