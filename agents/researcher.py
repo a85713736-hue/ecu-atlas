@@ -57,6 +57,36 @@ def rss_search(query: str) -> list[dict]:
     if not output: raise RuntimeError('RSS search returned no items')
     return output
 
+def ddg_search(query: str) -> list[dict]:
+    """Independent DuckDuckGo HTML search; no API key required."""
+    url = 'https://html.duckduckgo.com/html/?' + urllib.parse.urlencode({'q': query})
+    req = urllib.request.Request(url, headers={
+        'User-Agent': 'Mozilla/5.0 (compatible; ECUAtlasResearch/0.5)',
+        'Accept': 'text/html'
+    })
+    with urllib.request.urlopen(req, timeout=25) as response:
+        page = response.read(700_000).decode('utf-8', errors='replace')
+    output = []
+    for match in re.finditer(r'<a\\b([^>]*\\bclass=["\\'][^"\\']*result__a[^"\\']*["\\'][^>]*)>(.*?)</a>', page, flags=re.I | re.S):
+        attrs, label = match.groups()
+        href_match = re.search(r'\\bhref=["\\']([^"\\']+)["\\']', attrs, flags=re.I)
+        if not href_match:
+            continue
+        link = html.unescape(href_match.group(1))
+        parsed = urllib.parse.urlparse(link)
+        if parsed.path.startswith('/l/'):
+            link = urllib.parse.parse_qs(parsed.query).get('uddg', [''])[0]
+        if not link.startswith(('https://', 'http://')):
+            continue
+        title = re.sub(r'<[^>]+>', ' ', label)
+        output.append({'title': html.unescape(title).strip(), 'url': link,
+                       'snippet': '', 'verification': 'unverified'})
+        if len(output) >= 10:
+            break
+    if not output:
+        raise RuntimeError('DuckDuckGo returned no parseable search results')
+    return output
+
 def ecu_identifiers(ecu: str) -> list[str]:
     return [token.upper() for token in re.findall(r'[A-Za-z0-9]+', ecu)
             if len(token) >= 5 and any(ch.isdigit() for ch in token)]
