@@ -18,6 +18,12 @@ model Ecu {
   status       String   @default("unverified")
   createdAt    DateTime @default(now())
   sources      Source[]
+  hardware     EcuHardware[]
+  software     EcuSoftware[]
+  pins         EcuPin[]
+  memories     EcuMemory[]
+  loaders      EcuLoader[]
+  evidence     EcuEvidence[]
 }
 
 model Source {
@@ -35,4 +41,94 @@ model Task {
   role      String
   status    String   @default("queued")
   createdAt DateTime @default(now())
+}
+
+model EcuHardware {
+  id            String   @id @default(cuid())
+  ecuId         String
+  ecu           Ecu      @relation(fields: [ecuId], references: [id], onDelete: Cascade)
+  partNumber    String
+  revision      String?
+  pcbRevision   String?
+  connectorInfo String?
+  notes         String?
+  verification  String   @default("unverified")
+  createdAt     DateTime @default(now())
+  @@index([ecuId, partNumber])
+}
+
+model EcuSoftware {
+  id           String   @id @default(cuid())
+  ecuId        String
+  ecu          Ecu      @relation(fields: [ecuId], references: [id], onDelete: Cascade)
+  softwareId   String
+  calibration  String?
+  engine       String?
+  vehicle      String?
+  notes        String?
+  verification String   @default("unverified")
+  @@index([ecuId, softwareId])
+}
+
+model EcuPin {
+  id           String  @id @default(cuid())
+  ecuId        String
+  ecu          Ecu     @relation(fields: [ecuId], references: [id], onDelete: Cascade)
+  hardwareId   String?
+  connector    String
+  pin          String
+  signal       String
+  direction    String?
+  voltage      String?
+  notes        String?
+  evidenceUrl  String?
+  verification String  @default("unverified")
+  @@index([ecuId, connector, pin])
+}
+
+model EcuMemory {
+  id           String  @id @default(cuid())
+  ecuId        String
+  ecu          Ecu     @relation(fields: [ecuId], references: [id], onDelete: Cascade)
+  hardwareId   String?
+  component    String
+  type         String
+  capacity     String?
+  addressRange String?
+  readMethod   String?
+  writeMethod  String?
+  evidenceUrl  String?
+  verification String  @default("unverified")
+  @@index([ecuId, type])
+}
+
+model EcuLoader {
+  id           String  @id @default(cuid())
+  ecuId        String
+  ecu          Ecu     @relation(fields: [ecuId], references: [id], onDelete: Cascade)
+  hardwareId   String?
+  tool         String
+  module       String?
+  mode         String
+  operation    String?
+  backupScope  String?
+  notes        String?
+  evidenceUrl  String?
+  verification String  @default("unverified")
+  @@index([ecuId, tool])
+}
+
+model EcuEvidence {
+  id           String   @id @default(cuid())
+  ecuId        String
+  ecu          Ecu      @relation(fields: [ecuId], references: [id], onDelete: Cascade)
+  subject      String
+  claim        String
+  sourceUrl    String
+  sourceType   String?
+  capturedAt   DateTime?
+  verification String   @default("unverified")
+  notes        String?
+  createdAt    DateTime @default(now())
+  @@index([ecuId, subject])
 }
