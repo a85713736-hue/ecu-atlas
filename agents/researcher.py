@@ -79,7 +79,7 @@ def run(ecu: str, base_url: str = '') -> dict:
     sections = {}
     seen = set()
     search_name = ' '.join(identifiers)
-    variants = [search_name, ' '.join(re.findall(r'[A-Za-z]+|[0-9]+', search_name))]
+    variants = [search_name]
     for topic, pattern in SEARCH_TERMS.items():
         query = pattern.format(ecu=variants[0])
         try:
