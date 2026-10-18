@@ -28,13 +28,13 @@ try {
     const loaderSpecs = [
       {suffix:'bitbox454',tool:'BitBox',module:'FID 454',mode:'Bench',operation:'Flash/EEPROM RD/WR; checksum',url:'https://bitsoftware.com/bitbox/catalog/58',notes:'Поддержка на уровне семейства; нужен Scanmatik 2 Pro и адаптер с управлением питанием. Проверить защиту и HW.'},
       {suffix:'pcm92',tool:'PCMflash',module:'92',mode:'Bench/service',operation:'Flash RD/WR/CK; EEPROM RD/WR',url:'https://ecutools.eu/chip-tuning/pcmflash/module-92/',notes:'Для MG1US008 SPC574K/TC277TP. Новая защита может препятствовать работе. Требуется сверка HW.'},
-      {suffix:'pcm89',tool:'PCMflash',module:'89',mode:'OBD / зависит от автомобиля',operation:'RD/WR/CK для Great Wall/Haval MG1US008',url:'https://scanmatik.pro/pages/pcm',notes:'Поддержка семейства Great Wall/Haval подтверждена перечнем PCMflash; не переносить автоматически на Chery или Changan и не гарантировать конкретную HW.'}
+      ...(r.manufacturer==='Haval'?[{suffix:'pcm89',tool:'PCMflash',module:'89',mode:'OBD / зависит от автомобиля',operation:'RD/WR/CK для Great Wall/Haval MG1US008',url:'https://scanmatik.pro/pages/pcm',notes:'Поддержка семейства Great Wall/Haval подтверждена перечнем PCMflash; совместимость конкретной HW/SW не гарантирована.'}]:[])
     ];
     for (const l of loaderSpecs) {
       await prisma.ecuLoader.upsert({
         where:{id:r.id+'-'+l.suffix},
         create:{id:r.id+'-'+l.suffix,ecuId:r.id,tool:l.tool,module:l.module,mode:l.mode,operation:l.operation,evidenceUrl:l.url,verification:'family-documented',notes:l.notes},
-        update:{}
+        update:{mode:l.mode,operation:l.operation,evidenceUrl:l.url,notes:l.notes,verification:'family-documented'}
       });
     }
     await prisma.ecuEvidence.upsert({
