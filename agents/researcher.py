@@ -136,6 +136,22 @@ def run(ecu: str, base_url: str = '') -> dict:
                     break
             except Exception as exc:
                 sections['fallback_' + str(len(sections))] = {'query': query, 'results': [], 'error': str(exc)}
+    if not seen:
+        for query in ['"' + search_name + '" ECU', 'Bosch ' + search_name, search_name + ' flash EEPROM']:
+            try:
+                raw = ddg_search(query)
+                results = []
+                for item in raw:
+                    url = item['url'].split('#')[0].rstrip('/')
+                    if url in seen or not relevant_result(item, identifiers):
+                        continue
+                    seen.add(url)
+                    results.append(item)
+                sections['duckduckgo_' + str(len(sections))] = {'query': query, 'results': results, 'discarded': len(raw)-len(results)}
+                if results:
+                    break
+            except Exception as exc:
+                sections['duckduckgo_' + str(len(sections))] = {'query': query, 'results': [], 'error': str(exc)}
     return {
         "search_backend": "searxng" if base_url else "bing_rss",
         "ecu": ecu.strip(),
