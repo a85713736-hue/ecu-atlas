@@ -7,7 +7,7 @@ const stages = [
   {name:'Поиск источников',detail:'Бесплатный RSS-поиск, каталоги загрузчиков, технические форумы'},
   {name:'Извлечение данных',detail:'HW/SW, MCU, Flash/EEPROM, режимы OBD/Bench/Boot'},
   {name:'Верификация',detail:'Сопоставление сведений и сохранение ссылок на первоисточники'},
-  {name:'Публикация',detail:'Только после проверки; автоматическая запись пока отключена'},
+  {name:'Публикация',detail:'Кандидаты сохраняются в отчёте задания. Подтверждённые данные публикуются только после проверки'},
 ];
 
 export default function AgentsPage() {
@@ -26,7 +26,7 @@ export default function AgentsPage() {
     <h2>Этапы обработки</h2>
     {stages.map((stage,index)=><div className="card" key={stage.name}>
       <h3>{index+1}. {stage.name}</h3><p>{stage.detail}</p>
-      <small>Статус: {index===3?'Заблокировано до проверки':'Требуется запуск GitHub Actions'}</small>
+      <small>Статус: {index===3?'Заблокировано до проверки':'Автоматическая обработка очереди каждые 3 часа'}</small>
     </div>)}
     <div className="card">
       <h2>Результаты исследований</h2>
