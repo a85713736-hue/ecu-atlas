@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import AgentControls from '../../components/AgentControls';
 
 export const metadata = { title: 'Панель агентов — ECU Atlas' };
 
@@ -13,9 +14,10 @@ export default function AgentsPage() {
   return <main>
     <p><Link href="/">← Каталог ЭБУ</Link></p>
     <h1>Панель исследовательских агентов</h1>
-    <p>Управление исследованием ECU Atlas. Поиск пока запускается через GitHub Actions, не через сайт.</p>
+    <p>Создание заданий доступно через защищённую очередь. Исполнитель поиска пока запускается отдельно через GitHub Actions.</p>
+    <AgentControls/>
     <div className="card">
-      <h2>Новое исследование</h2>
+      <h2>Запуск поиска через GitHub Actions</h2>
       <p><label htmlFor="ecu">Модель ЭБУ или номер HW</label></p>
       <input id="ecu" name="ecu" value="Bosch MG1US008" readOnly aria-describedby="launch-help"/>
       <p id="launch-help"><small>Запуск с сайта будет доступен после настройки защищённого API. Сейчас откройте GitHub Actions, выберите «Run workflow» и введите обозначение ЭБУ.</small></p>
