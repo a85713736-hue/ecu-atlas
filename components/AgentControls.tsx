@@ -66,7 +66,7 @@ export default function AgentControls(){
     {t.status==='completed'&&report&&<p><small>Источников: {report.review?.source_count??report.sources?.length??0} · Данные требуют проверки</small></p>}
     <button onClick={()=>setExpanded(expanded===t.id?null:t.id)}>{expanded===t.id?'Скрыть материалы':'Посмотреть материалы'}</button>
     {expanded===t.id&&<div style={{padding:'10px 0'}}>
-     {!report?<p>Отчёт ещё не получен. Для обработки очереди требуется запущенный исполнитель SearXNG.</p>:<>
+     {!report?<p>{t.status==='queued'?'Задание ожидает обработки GitHub Actions (автоматическая проверка очереди каждые 3 часа).':t.status==='running'?'Агент обрабатывает задание. Обновите список позже.':t.status==='failed'?'Исследование завершилось с ошибкой; подробности могут отсутствовать.':'Отчёт пока не получен. Обновите список заданий.'}</p>:<>
       <p><strong>Статус проверки:</strong> {report.review?.review_status==='pending'?'Ожидает ручной проверки':report.error?'Ошибка':'Не проверено'}. Автоматическая публикация запрещена.</p>
       {report.error&&<p role="alert">{report.error}</p>}
       <h4>Найденные источники</h4>
