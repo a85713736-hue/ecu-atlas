@@ -28,7 +28,7 @@ try {
     const loaderSpecs = [
       {suffix:'bitbox454',tool:'BitBox',module:'FID 454',mode:'Bench',operation:'Flash/EEPROM RD/WR; checksum',url:'https://bitsoftware.com/bitbox/catalog/58',notes:'Поддержка на уровне семейства; нужен Scanmatik 2 Pro и адаптер с управлением питанием. Проверить защиту и HW.'},
       {suffix:'pcm92',tool:'PCMflash',module:'92',mode:'Bench/service',operation:'Flash RD/WR/CK; EEPROM RD/WR',url:'https://ecutools.eu/chip-tuning/pcmflash/module-92/',notes:'Для MG1US008 SPC574K/TC277TP. Новая защита может препятствовать работе. Требуется сверка HW.'},
-      {suffix:'pcm89',tool:'PCMflash',module:'89',mode:'не установлен',operation:'требует проверки',url:'https://gt-forum.info/threads/26615/',notes:'Упомянут в каталоге как рекомендованный. Режим и функции для данного HW не проверены.'}
+      {suffix:'pcm89',tool:'PCMflash',module:'89',mode:'OBD / зависит от автомобиля',operation:'RD/WR/CK для Great Wall/Haval MG1US008',url:'https://scanmatik.pro/pages/pcm',notes:'Поддержка семейства Great Wall/Haval подтверждена перечнем PCMflash; не переносить автоматически на Chery или Changan и не гарантировать конкретную HW.'}
     ];
     for (const l of loaderSpecs) {
       await prisma.ecuLoader.upsert({
