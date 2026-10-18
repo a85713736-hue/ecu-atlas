@@ -28,7 +28,9 @@ def once(base, token, searx):
         if all(not s['results'] for s in found['sections'].values()):
             failures = [name + ': ' + str(section['error']) for name, section in found['sections'].items() if section.get('error')]
             discarded = sum(section.get('discarded', 0) for section in found['sections'].values())
-            detail = '; '.join(failures)[:350] if failures else 'No exact identifier match; discarded results: ' + str(discarded)
+            tail = list(found['sections'].items())[-5:]
+            diagnostics = [name + ': ' + (str(section.get('error')) if section.get('error') else '0 matches, ' + str(section.get('discarded', 0)) + ' discarded') for name, section in tail]
+            detail = ('; '.join(diagnostics) + '; total discarded: ' + str(discarded))[:550]
             raise RuntimeError('Search backend ' + found['search_backend'] + ': ' + detail)
         extracted = extract(found)
         review = verify(found)
