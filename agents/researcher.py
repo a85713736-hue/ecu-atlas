@@ -1,6 +1,6 @@
-"""Free ECU Atlas researcher: public search via configurable SearXNG JSON endpoint.
+"""Free ECU Atlas researcher: Bing RSS or optional self-hosted SearXNG.
 
-Set SEARXNG_URL to a trusted instance you control, with JSON output enabled.
+No API key required for RSS. Optional SEARXNG_URL enables self-hosted search.
 No paid search API or payment card required. Public instances may reject bots.
 """
 import argparse
@@ -11,6 +11,9 @@ from pathlib import Path
 import sys
 import urllib.parse
 import urllib.request
+import xml.etree.ElementTree as ET
+import re
+import html
 
 SEARCH_TERMS = {
     "identification": '"{ecu}" ECU HW SW identification',
@@ -37,19 +40,35 @@ def search(query: str, base_url: str) -> list[dict]:
         if str(r.get("url", "")).startswith(("https://", "http://"))
     ]
 
-def run(ecu: str, base_url: str) -> dict:
-    if not base_url:
-        raise ValueError("SEARXNG_URL is required. Deploy a SearXNG instance with JSON enabled.")
+def rss_search(query: str) -> list[dict]:
+    url = 'https://www.bing.com/search?' + urllib.parse.urlencode({'q': query, 'format': 'rss'})
+    req = urllib.request.Request(url, headers={'User-Agent':'Mozilla/5.0 ECUAtlasResearch/0.4','Accept':'application/rss+xml,application/xml'})
+    with urllib.request.urlopen(req, timeout=25) as response:
+        data = response.read(700_000)
+    root = ET.fromstring(data)
+    output = []
+    for item in root.findall('./channel/item')[:10]:
+        link = (item.findtext('link') or '').strip()
+        if not link.startswith(('https://','http://')): continue
+        output.append({'title':html.unescape(item.findtext('title') or ''),
+                       'url':link,
+                       'snippet':re.sub(r'<[^>]*>', ' ', html.unescape(item.findtext('description') or ''))[:700],
+                       'verification':'unverified'})
+    if not output: raise RuntimeError('RSS search returned no items')
+    return output
+
+def run(ecu: str, base_url: str = '') -> dict:
     if not ecu.strip() or len(ecu) > 150:
         raise ValueError("ECU name must contain 1–150 characters")
     sections = {}
     for topic, pattern in SEARCH_TERMS.items():
         query = pattern.format(ecu=ecu.strip())
         try:
-            sections[topic] = {"query": query, "results": search(query, base_url)}
+            sections[topic] = {"query": query, "results": (search(query, base_url) if base_url else rss_search(query))}
         except Exception as exc:
             sections[topic] = {"query": query, "results": [], "error": str(exc)}
     return {
+        "search_backend": "searxng" if base_url else "bing_rss",
         "ecu": ecu.strip(),
         "created_at": dt.datetime.now(dt.timezone.utc).isoformat(),
         "status": "needs_human_verification",
