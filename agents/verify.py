@@ -14,8 +14,7 @@ def verify(document: dict) -> dict:
     findings = []
     seen = set()
     errors = []
-    for category in CATEGORIES:
-        section = document.get("sections", {}).get(category, {})
+    for category, section in document.get("sections", {}).items():
         if section.get("error"):
             errors.append({"category": category, "error": section["error"]})
         for item in section.get("results", []):
