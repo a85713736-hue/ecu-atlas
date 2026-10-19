@@ -12,6 +12,8 @@ from crosscheck import crosscheck
 from pinout import pinout_leads
 from memory import memory_leads
 from loader import loader_leads
+from pcb import pcb_leads
+from documentation import documentation_leads
 
 def api(base, token, payload):
     url = base.rstrip('/') + '/api/agents/worker'
@@ -42,7 +44,9 @@ def once(base, token, searx):
         pinouts = pinout_leads(extracted)
         memories = memory_leads(extracted)
         loaders = loader_leads(extracted)
-        result = {'research':found,'extracted':extracted,'review':review,'crosscheck':correlated,'pinout':pinouts,'memory':memories,'loader':loaders}
+        pcb = pcb_leads(extracted)
+        documentation = documentation_leads(found)
+        result = {'research':found,'extracted':extracted,'review':review,'crosscheck':correlated,'pinout':pinouts,'memory':memories,'loader':loaders,'pcb':pcb,'documentation':documentation}
         # Keep HTTP request bounded; the full output remains local as a backup.
         os.makedirs('research/out', exist_ok=True)
         with open('research/out/' + task['id'] + '.json','w',encoding='utf-8') as handle:
@@ -60,7 +64,7 @@ def once(base, token, searx):
                 })
         compact = {'candidates': candidates[:100], 'review':{'source_count':review['source_count'],'review_status':'pending'},
                    'sources':review['findings'][:35], 'extracted_documents':extracted['documents'][:15],
-                   'errors':review['errors'] + extracted['errors'][:10], 'crosscheck':correlated, 'pinout':pinouts, 'memory':memories, 'loader':loaders, 'publish_allowed':False}
+                   'errors':review['errors'] + extracted['errors'][:10], 'crosscheck':correlated, 'pinout':pinouts, 'memory':memories, 'loader':loaders, 'pcb':pcb, 'documentation':documentation, 'publish_allowed':False}
         while len(json.dumps(compact,ensure_ascii=False))>220000 and compact['candidates']:
             compact['candidates'].pop()
         while len(json.dumps(compact,ensure_ascii=False))>220000 and compact['sources']:
