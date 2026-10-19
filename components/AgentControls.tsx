@@ -5,7 +5,9 @@ type Source = {category?:string;title?:string;source_url?:string;snippet?:string
 type Candidate = {category?:string;value?:string;excerpt?:string;verification?:string;hardware_revision?:string|null};
 type Document = {source_url?:string;candidates?:Candidate[]};
 type Claim = {subject?:string;claim?:string;excerpt?:string;source_url?:string;hardware_revision?:string|null;verification?:string};
-type Report = {candidates?:Claim[];review?:{source_count?:number;review_status?:string};sources?:Source[];extracted_documents?:Document[];errors?:Array<{error?:string;category?:string}>;publish_allowed?:boolean;error?:string};
+type AgentLead = {source_url?:string;excerpt?:string;[key:string]:unknown};
+type AgentReport = {leads?:AgentLead[];claims?:AgentLead[]};
+type Report = {crosscheck?:AgentReport;pinout?:AgentReport;memory?:AgentReport;loader?:AgentReport;pcb?:AgentReport;documentation?:AgentReport;candidates?:Claim[];review?:{source_count?:number;review_status?:string};sources?:Source[];extracted_documents?:Document[];errors?:Array<{error?:string;category?:string}>;publish_allowed?:boolean;error?:string};
 type Task = {id:string;ecuId:string|null;status:string;createdAt:string;resultJson?:string|null};
 const labels:Record<string,string> = {identification:'Идентификация HW/SW',mcu:'Процессор',memory:'Flash / EEPROM',pinout:'Распиновка',loader:'Загрузчики и режимы',field_reports:'Практический опыт',bosch_part_number:'Номер Bosch',mode:'Режим подключения'};
 const statuses:Record<string,string> = {queued:'В очереди',running:'Исследуется',completed:'Собраны материалы',failed:'Ошибка исследования'};
@@ -77,6 +79,17 @@ export default function AgentControls(){
       {report.candidates?.length ? <ul>{report.candidates.map((c,i)=><li key={i}><button disabled={busy||!token||!targetEcu||!targetHw} onClick={()=>importCandidate(t.id,i)}>Сохранить для HW (не проверено)</button>{' '}<strong>{labels[c.subject||'']||c.subject}:</strong> {c.claim} · HW: {c.hardware_revision||'не установлена'} · {safeUrl(c.source_url)?<a href={safeUrl(c.source_url)!} target="_blank" rel="noopener noreferrer">Источник</a>:'Без источника'}{c.excerpt&&<p><small>{c.excerpt}</small></p>}</li>)}</ul>:<p>Структурированные кандидаты пока не сформированы.</p>}
       <h4>Кандидаты: MCU, память, HW, загрузчики</h4>
       {!report.extracted_documents?.some(d=>d.candidates?.length)?<p>Пока нет извлечённых технических данных.</p>:report.extracted_documents?.map((d,i)=><div key={i}><p><small>{safeUrl(d.source_url)?<a href={safeUrl(d.source_url)!} target="_blank" rel="noopener noreferrer">{d.source_url}</a>:d.source_url}</small></p><ul>{d.candidates?.map((c,j)=><li key={j}><strong>{labels[c.category||'']||c.category}:</strong> {c.value} <small>— не проверено, HW-ревизия не подтверждена</small>{c.excerpt&&<p><small>{c.excerpt}</small></p>}</li>)}</ul></div>)}
+      <h4>Результаты специализированных агентов</h4>
+      {(['crosscheck','pinout','memory','loader','pcb','documentation'] as const).map(agent=>{
+       const data=report[agent];const leads=data?.leads||data?.claims||[];
+       const names:Record<string,string>={crosscheck:'Сопоставление источников',pinout:'Распиновки',memory:'Память и MCU',loader:'Загрузчики',pcb:'Платы и тестовые точки',documentation:'Документация'};
+       return <details key={agent}><summary>{names[agent]} — {leads.length} материалов</summary>
+        {!leads.length?<p><small>Кандидаты не обнаружены.</small></p>:<ul>{leads.slice(0,30).map((lead,i)=><li key={i}>
+         <small>{lead.source_url&&safeUrl(lead.source_url)?<a href={safeUrl(lead.source_url)!} target="_blank" rel="noopener noreferrer">Первoисточник</a>:'Источник не указан'} — не проверено</small>
+         <pre style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere',fontSize:'0.8rem'}}>{JSON.stringify(lead,null,2)}</pre>
+        </li>)}</ul>}
+       </details>;
+      })}
       {!!report.errors?.length&&<><h4>Ошибки сбора</h4><ul>{report.errors.map((e,i)=><li key={i}>{e.category?e.category+': ':''}{e.error}</li>)}</ul></>}
       <p><small>Это поисковые материалы, а не подтверждённая распиновка, ёмкость EEPROM или инструкция по подключению.</small></p>
      </>}
