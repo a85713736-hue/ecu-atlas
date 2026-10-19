@@ -61,12 +61,12 @@ def _html_links(page: str, excluded_hosts: tuple[str, ...]) -> list[dict]:
     """Extract possible external search links without assuming the engine's CSS."""
     output = []
     for attrs, label in re.findall(r'<a\\b([^>]*)>(.*?)</a>', page, flags=re.I | re.S):
-        href_match = re.search(r'href="([^"]+)"', attrs, flags=re.I)
+        href_match = re.search(r'''href\\s*=\\s*['\"]([^'\"]+)['\"]''', attrs, flags=re.I)
         if not href_match:
             continue
         link = html.unescape(href_match.group(1))
         parsed = urllib.parse.urlparse(link)
-        if parsed.path.startswith('/l/'):
+        if parsed.path.startswith('/l/') or parsed.hostname in ('duckduckgo.com', 'www.duckduckgo.com') and parsed.path.startswith('/l'):
             link = urllib.parse.parse_qs(parsed.query).get('uddg', [''])[0]
         parsed = urllib.parse.urlparse(link)
         if parsed.scheme not in ('http', 'https'):
