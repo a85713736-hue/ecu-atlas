@@ -18,6 +18,23 @@ jobs:
       - uses: actions/checkout@v4
       - name: Validate Python research code
         run: python3 -m py_compile agents/researcher.py agents/extract.py agents/verify.py agents/worker.py agents/crosscheck.py agents/pinout.py agents/memory.py agents/loader.py agents/pcb.py agents/documentation.py
+      - name: Smoke test research agent modules
+        run: |
+          PYTHONPATH=agents python3 - <<'PY'
+          from crosscheck import crosscheck
+          from pinout import pinout_leads
+          from memory import memory_leads
+          from loader import loader_leads
+          from pcb import pcb_leads
+          from documentation import documentation_leads
+          from researcher import relevant_result, _html_links
+          sample = {'documents': []}
+          for agent in (crosscheck, pinout_leads, memory_leads, loader_leads, pcb_leads):
+              assert isinstance(agent(sample), dict)
+          assert isinstance(documentation_leads({'sections': {}}), dict)
+          assert relevant_result({'title': 'Bosch MG1US008 ECU', 'url': 'https://example.com'}, ['MG1US008'])
+          assert _html_links("<a href='https://example.com/MG1US008'>Bosch MG1US008 ECU</a>", ('duckduckgo.com',))
+          PY
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
