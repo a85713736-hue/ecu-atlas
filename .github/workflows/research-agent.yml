@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Validate Python research code
-        run: python3 -m py_compile agents/researcher.py agents/extract.py agents/verify.py agents/worker.py agents/crosscheck.py agents/pinout.py
+        run: python3 -m py_compile agents/researcher.py agents/extract.py agents/verify.py agents/worker.py agents/crosscheck.py agents/pinout.py agents/memory.py agents/loader.py
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
