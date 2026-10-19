@@ -8,6 +8,7 @@ import urllib.error
 from researcher import run
 from verify import verify
 from extract import extract
+from crosscheck import crosscheck
 
 def api(base, token, payload):
     url = base.rstrip('/') + '/api/agents/worker'
@@ -34,7 +35,8 @@ def once(base, token, searx):
             raise RuntimeError('Search backend ' + found['search_backend'] + ': ' + detail)
         extracted = extract(found)
         review = verify(found)
-        result = {'research':found,'extracted':extracted,'review':review}
+        correlated = crosscheck(extracted)
+        result = {'research':found,'extracted':extracted,'review':review,'crosscheck':correlated}
         # Keep HTTP request bounded; the full output remains local as a backup.
         os.makedirs('research/out', exist_ok=True)
         with open('research/out/' + task['id'] + '.json','w',encoding='utf-8') as handle:
@@ -52,7 +54,7 @@ def once(base, token, searx):
                 })
         compact = {'candidates': candidates[:100], 'review':{'source_count':review['source_count'],'review_status':'pending'},
                    'sources':review['findings'][:35], 'extracted_documents':extracted['documents'][:15],
-                   'errors':review['errors'] + extracted['errors'][:10], 'publish_allowed':False}
+                   'errors':review['errors'] + extracted['errors'][:10], 'crosscheck':correlated, 'publish_allowed':False}
         while len(json.dumps(compact,ensure_ascii=False))>220000 and compact['candidates']:
             compact['candidates'].pop()
         while len(json.dumps(compact,ensure_ascii=False))>220000 and compact['sources']:
