@@ -6,12 +6,12 @@ on:
         description: 'ECU family or hardware number (standalone research)'
         required: false
         default: ''
-  schedule:
-    - cron: '15 */3 * * *'
 permissions:
   contents: read
 jobs:
   research:
+    # Paused at the owner's request. Remove this guard to re-enable.
+    if: ${{ false }}
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
