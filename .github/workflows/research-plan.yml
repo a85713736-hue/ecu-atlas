@@ -1,10 +1,10 @@
 name: Research planner
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 5 * * *'
 jobs:
   plan:
+    # Paused at the owner's request. Remove this guard to re-enable.
+    if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
